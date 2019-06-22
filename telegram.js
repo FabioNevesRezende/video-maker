@@ -29,10 +29,10 @@ function robot(){
         }
         catch(e)
         {   
-            console.log('***** Objeto exception:')
+            console.log('> [telegram-robot] ***** [makeVideo][ERROR] Objeto exception:')
             robots.utils.printaJson(e)
-            console.log('*****')
-            return false
+            console.log('> [telegram-robot] *****')
+            return e
         }
     }
 
@@ -50,10 +50,11 @@ function robot(){
         state.save(content)
         robots.telegram.sendMessage(chatId, 'Certo, vou fazer um vídeo a respeito de: ' + searchTerm)
         makeVideoStatus = await makeVideo()
-        if(makeVideoStatus)
+        if(makeVideoStatus === true)
             robots.telegram.sendMessage(chatId, 'Vídeo pronto')
         else{
             robots.telegram.sendMessage(chatId, 'Erro ao gerar vídeo, encerrando operação')
+            robots.telegram.sendMessage(chatId, makeVideoStatus.toString())
             return
         }
         robots.telegram.sendMessage(chatId, 'Segue o video:')
