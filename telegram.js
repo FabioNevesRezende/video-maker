@@ -1,13 +1,6 @@
-
 const TelegramBot = require( `node-telegram-bot-api` )
 const state = require('./robots/state.js')
 const token = require('./credentials/telegram.json')
-const fs = require('fs')
-
-async function loadState(){
-  const content = state.load()
-}
-
 
 function robot(){
     console.log('> [telegram-robot] Starting...')
@@ -32,7 +25,6 @@ function robot(){
             await robots.text()
             await robots.image()
             await robots.video()
-            //await robots.youtube()
             return true
         }
         catch(e)
@@ -44,53 +36,43 @@ function robot(){
         }
     }
 
-    async function onBotText(msg, match){
-        const chatId = msg.chat.id;
-        const searchTerm = match[1]
-        const prefixIndex = match[2]
-        
-        content.searchTerm = searchTerm
-        content.prefix = prefixIndex // 
-        content.queryId = robots.utils.uuidv4()
-        state.save(content)
-        robots.telegram.sendMessage(chatId, 'Certo, vou fazer um vídeo a respeito de: ' + searchTerm);
-        makeVideoStatus = await makeVideo();
-        if(makeVideoStatus)
-            robots.telegram.sendMessage(chatId, 'Vídeo pronto');
-        else{
-            console.log('Error generating video, exiting...')
+    async function onBotMake(msg, match){
+        const chatId = msg.chat.id
+        const searchTerm = match[1].trim()
+        const videoFilePath = './content/output.mp4'
+
+        if(!searchTerm){
+            robots.telegram.sendMessage(chatId, 'Input inválido, digite /help para ajuda')
             return
         }
+        content.searchTerm = searchTerm
+        content.queryId = robots.utils.uuidv4()
+        state.save(content)
+        robots.telegram.sendMessage(chatId, 'Certo, vou fazer um vídeo a respeito de: ' + searchTerm)
+        makeVideoStatus = await makeVideo()
+        if(makeVideoStatus)
+            robots.telegram.sendMessage(chatId, 'Vídeo pronto')
+        else{
+            robots.telegram.sendMessage(chatId, 'Erro ao gerar vídeo, encerrando operação')
+            return
+        }
+        robots.telegram.sendMessage(chatId, 'Segue o video:')
 
+        robots.telegram.sendDocument(chatId, videoFilePath)
+    }
 
-        content = state.load()
+    async function onBotHelp(msg, match){
+        const chatId = msg.chat.id
+        robots.telegram.sendMessage(chatId, 'Video Maker para telegram, programa código aberto disponibilizado em https://github.com/FabioNevesRezende/video-maker')
+        robots.telegram.sendMessage(chatId, 'Comandos disponiveis: ')
 
-
-        const videoFilePath = './content/output.mp4'
-        /*const videoFileSize = fs.statSync(videoFilePath).size
-        const videoTitle = `${content.prefix} ${content.searchTerm}`
-        const videoTags = [content.searchTerm, ...content.sentences[0].keywords]
-        const videoDescription = content.sentences.map((sentence) => {
-          return sentence.text
-        }).join('\n\n')*/
-    
-        var videoCntnt = await fs.createReadStream(videoFilePath);
-        robots.telegram.sendMessage(chatId, 'Segue o video:');
-
-        const fileOptions = {
-            // Explicitly specify the file name.
-            filename: videoFilePath,
-            // Explicitly specify the MIME type.
-            contentType: 'video/mp4',
-        };
-
-        robots.telegram.sendDocument(chatId, videoFilePath);
-        
-
+        robots.telegram.sendMessage(chatId, '/help - mostra esta mensagem de ajuda ')
+        robots.telegram.sendMessage(chatId, '/make <tema> - faz um vídeo sobre o <tema> escolhido ')
 
     }
 
-    robots.telegram.onText(/\/make (.+)/, onBotText) //
+    robots.telegram.onText(/\/make(.+)/, onBotMake)
+    robots.telegram.onText(/\/help/, onBotHelp)
 
 
 }
