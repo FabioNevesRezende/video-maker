@@ -24,3 +24,15 @@ File: `watson-nlu.json`
   "url": "https://gateway.watsonplatform.net/natural-language-understanding/api"
 }
 ```
+
+"token": "bot father token",
+## Telegram father bot Token
+
+File: `telegram.json`
+
+```
+{
+    "token": "bot father token",
+    "uri": "t.me/my-bot-uri"
+}
+```
