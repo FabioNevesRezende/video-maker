@@ -1,37 +1,41 @@
 const TelegramBot = require( `node-telegram-bot-api` )
 const state = require('./robots/state.js')
 const token = require('./credentials/telegram.json')
+const OutputRobot = require('./robots/output.js')
+const TextRobot = require('./robots/text.js')
+const ImageRobot = require('./robots/image.js');
+const VideoRobot = require('./robots/video.js');
 
 function robot(){
-    console.log('> [telegram-robot] Starting...')
 
-    const robots = {
+    var robots = {
         input: require('./robots/input.js'),
-        text: require('./robots/text.js'),
+        text: new TextRobot('text-robot'),
         state: require('./robots/state.js'),
-        image: require('./robots/image.js'),
-        video: require('./robots/video.js'),
+        image: new ImageRobot('image-robot'),
+        video: new VideoRobot('video-robot'),
         youtube: require('./robots/youtube.js'),
         utils: require('./robots/utils.js'),
+        queue: require('./robots/queue.js'),
+        output: new OutputRobot('output-robot'),
         telegram: new TelegramBot( token.token, { polling: true } )
     }
+    robots.queue.queueText.push('> [telegram-robot] Starting...')
 
-    var content = {
-        maximumSentences: 7
-    }
+    var content = {}
 
     async function makeVideo(){
         try{
-            await robots.text()
-            await robots.image()
-            await robots.video()
+            await robots.text.run()
+            await robots.image.run()
+            await robots.video.run()
             return true
         }
         catch(e)
         {   
-            console.log('> [telegram-robot] ***** [makeVideo][ERROR] Objeto exception:')
+            robots.queue.queueText.push('> [telegram-robot] ***** [makeVideo][ERROR] Objeto exception:')
             robots.utils.printaJson(e)
-            console.log('> [telegram-robot] *****')
+            robots.queue.queueText.push('> [telegram-robot] *****')
             return e
         }
     }

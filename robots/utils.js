@@ -10,7 +10,6 @@ function uuidv4() {
     });
 }
   
-
 module.exports = {
     printaJson,
     uuidv4
